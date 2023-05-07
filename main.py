@@ -1,4 +1,4 @@
-
+import time
 import pandas as pd
 import requests
 from datetime import datetime
@@ -7,22 +7,41 @@ from bs4 import BeautifulSoup
 import numpy as np
 import math
 import mplfinance as mpf
+from datetime import datetime, timedelta
+
+
+
+stock_list = []
+
+with open('symbols.csv', 'r') as file:
+    for line in file:
+        stock_list.append(line.strip())
+
+
+# parameter setup
+length = 20
+mult = 2
+length_KC = 20
+mult_KC = 1.5
+
+iter = 1
 
 screened_list = []
-stock_list = ['AAPL','TSLA','MSFT','AMZN']
 for stock_code in stock_list:
   # get stock prices
-  df = yf.download(stock_code, start='2020-01-01', threads= False)
+  print(stock_code + ' ' + str(iter))
+  iter += 1
 
-  # parameter setup
-  length = 20
-  mult = 2
-  length_KC = 20
-  mult_KC = 1.5
-
+  try:
+      df = yf.download(stock_code, start='2023-01-01', threads=False)
+  except:
+      print(f"Error downloading data for {stock_code}. Skipping...")
+      continue
+'''
   # calculate BB
   m_avg = df['Close'].rolling(window=length).mean()
   m_std = df['Close'].rolling(window=length).std(ddof=0)
+  
   df['upper_BB'] = m_avg + mult * m_std
   df['lower_BB'] = m_avg - mult * m_std
 
@@ -31,6 +50,8 @@ for stock_code in stock_list:
   df['tr1'] = abs(df["High"] - df["Close"].shift())
   df['tr2'] = abs(df["Low"] - df["Close"].shift())
   df['tr'] = df[['tr0', 'tr1', 'tr2']].max(axis=1)
+
+ 
 
   # calculate KC
   range_ma = df['tr'].rolling(window=length_KC).mean()
@@ -69,12 +90,13 @@ for stock_code in stock_list:
       screened_list.append(stock_code)
 
 
-'''
+
 if screened_list:
   print(screened_list)
 else:
   print('No stock fits the Squeeze Momentum Indicator entry requirement')
 
+  
   # to make the visualization better by only taking the last 100 rows of data
 df = df[-100:]
 
@@ -106,4 +128,6 @@ fig, axes = mpf.plot(ohcl,
               type='candle', 
               addplot=apds,
               returnfig=True)
+              
+
               '''
