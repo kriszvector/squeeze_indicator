@@ -11,11 +11,11 @@ from datetime import datetime, timedelta
 
 
 
-stock_list = []
+stock_list = ['SPY']
 
-with open('symbols.csv', 'r') as file:
-    for line in file:
-        stock_list.append(line.strip())
+# with open('symbols.csv', 'r') as file:
+#     for line in file:
+#         stock_list.append(line.strip())
 
 
 # parameter setup
@@ -37,7 +37,7 @@ for stock_code in stock_list:
   except:
       print(f"Error downloading data for {stock_code}. Skipping...")
       continue
-'''
+
   # calculate BB
   m_avg = df['Close'].rolling(window=length).mean()
   m_std = df['Close'].rolling(window=length).std(ddof=0)
@@ -74,29 +74,35 @@ for stock_code in stock_list:
 
   # buying window for long position:
   # 1. black cross becomes gray (the squeeze is released)
+  df['long_cond1'] = (df['squeeze_off'][-2] == False) & (df['squeeze_off'][-1] == True)
   long_cond1 = (df['squeeze_off'][-2] == False) & (df['squeeze_off'][-1] == True) 
   # 2. bar value is positive => the bar is light green k
+  df['long_cond2'] = df['value'][-1] > 0
   long_cond2 = df['value'][-1] > 0
+  df['enter_long'] = long_cond1 and long_cond2
   enter_long = long_cond1 and long_cond2
 
   # buying window for short position:
   # 1. black cross becomes gray (the squeeze is released)
+  df['short_cond1'] = (df['squeeze_off'][-2] == False) & (df['squeeze_off'][-1] == True)
   short_cond1 = (df['squeeze_off'][-2] == False) & (df['squeeze_off'][-1] == True) 
-  # 2. bar value is negative => the bar is light red 
+  # 2. bar value is negative => the bar is light red
+  df['short_cond2'] = df['value'][-1] < 0
   short_cond2 = df['value'][-1] < 0
+  df['enter_short'] = short_cond1 and short_cond2
   enter_short = short_cond1 and short_cond2
 
   if enter_long | enter_short:
       screened_list.append(stock_code)
 
 
-
+print(df['Close', 'Open'])
 if screened_list:
   print(screened_list)
 else:
   print('No stock fits the Squeeze Momentum Indicator entry requirement')
 
-  
+'''  
   # to make the visualization better by only taking the last 100 rows of data
 df = df[-100:]
 
@@ -129,5 +135,5 @@ fig, axes = mpf.plot(ohcl,
               addplot=apds,
               returnfig=True)
               
-
-              '''
+mpf.show()
+'''
